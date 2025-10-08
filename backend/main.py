@@ -8,6 +8,7 @@ import faiss
 import numpy as np
 from config import Config
 from db import get_db_connection
+from smart_connection import get_smart_connection
 from models import LoginRequest, SignupRequest, AppointmentRequest, AppointmentResponse
 from preprocess import preprocess_text
 from queries import *
@@ -47,7 +48,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-conn = get_db_connection()
+# Use smart connection that auto-reconnects on SSL errors
+conn = get_smart_connection()
 
 
 @app.get("/")
