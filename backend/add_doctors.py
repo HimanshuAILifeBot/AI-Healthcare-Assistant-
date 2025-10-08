@@ -1,15 +1,29 @@
 
-import psycopg2
+from db import execute_query, get_db_cursor
 from config import Config
 
 def add_doctors():
+    """
+    Add doctors to Neon DB with updated schema
+    Schema: name, email, phone, specialization, qualification, experience_years, 
+            consultation_fee, rating, available, image_url, hospital, bio
+    """
+    
+    # Hospital names for rotation
+    hospitals = [
+        'City General Hospital',
+        'Saint Mary Medical Center', 
+        'Metro Health Institute',
+        'University Medical Center'
+    ]
+    
     doctors_to_add = [
         # Cardiology - Heart specialists
-        ('Dr. Michael Chen', 'Cardiology', 15, 4.8, 1),
-        ('Dr. Sarah Thompson', 'Cardiology', 12, 4.7, 2),
-        ('Dr. Robert Kim', 'Cardiology', 20, 4.9, 3),
-        ('Dr. Lisa Anderson', 'Cardiology', 8, 4.6, 4),
-        ('Dr. Ahmed Hassan', 'Cardiology', 18, 4.8, 1),
+        ('Dr. Michael Chen', 'Cardiology', 15, 4.8, 0),
+        ('Dr. Sarah Thompson', 'Cardiology', 12, 4.7, 1),
+        ('Dr. Robert Kim', 'Cardiology', 20, 4.9, 2),
+        ('Dr. Lisa Anderson', 'Cardiology', 8, 4.6, 3),
+        ('Dr. Ahmed Hassan', 'Cardiology', 18, 4.8, 0),
         
         # Dermatology - Skin specialists
         ('Dr. Emily Watson', 'Dermatology', 10, 4.7, 2),
@@ -177,31 +191,110 @@ def add_doctors():
         ('Dr. Gloria Fuller', 'Obstetrics and Gynecology', 13, 4.7, 4)
     ]
 
-    conn = None
+    
+    print("🏥 Adding doctors to Neon DB...")
+    print("=" * 60)
+    
     try:
-        conn = psycopg2.connect(
-            dbname=Config.DB_NAME,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-            host=Config.DB_HOST,
-            port=Config.DB_PORT
-        )
-        cur = conn.cursor()
-        for doctor in doctors_to_add:
-            cur.execute(
-                "INSERT INTO doctors (name, specialization, experience, rating, hospital_id) VALUES (%s, %s, %s, %s, %s)",
-                doctor
-            )
-        conn.commit()
-        cur.close()
-        print(f"Successfully added {len(doctors_to_add)} doctors.")
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-        if conn:
-            conn.rollback()
-    finally:
-        if conn is not None:
-            conn.close()
+        # Counter for success
+        success_count = 0
+        
+        with get_db_cursor() as cursor:
+            for name, specialization, experience, rating, hospital_idx in doctors_to_add:
+                # Generate email from name
+                email = name.lower().replace('dr. ', '').replace(' ', '.') + '@healthcare.com'
+                
+                # Generate phone number
+                phone = f'+1-555-{1000 + success_count:04d}'
+                
+                # Generate qualification
+                qualifications = {
+                    'Cardiology': 'MD, FACC, Board Certified Cardiologist',
+                    'Dermatology': 'MD, Board Certified Dermatologist',
+                    'Neurology': 'MD, PhD, Board Certified Neurologist',
+                    'Orthopedics': 'MD, FAAOS, Board Certified Orthopedic Surgeon',
+                    'Pediatrics': 'MD, FAAP, Board Certified Pediatrician',
+                    'Gastroenterology': 'MD, FACG, Board Certified Gastroenterologist',
+                    'Oncology': 'MD, FASCO, Board Certified Oncologist',
+                    'Psychiatry': 'MD, Board Certified Psychiatrist',
+                    'Urology': 'MD, FACS, Board Certified Urologist',
+                    'Ophthalmology': 'MD, Board Certified Ophthalmologist',
+                    'Otolaryngology': 'MD, Board Certified ENT Specialist',
+                    'Pulmonology': 'MD, FCCP, Board Certified Pulmonologist',
+                    'Endocrinology': 'MD, Board Certified Endocrinologist',
+                    'Rheumatology': 'MD, Board Certified Rheumatologist',
+                    'Nephrology': 'MD, Board Certified Nephrologist',
+                    'Allergist/Immunologist': 'MD, Board Certified Allergist',
+                    'General Surgery': 'MD, FACS, Board Certified Surgeon',
+                    'Infectious Disease': 'MD, Board Certified Infectious Disease Specialist',
+                    'Hematology': 'MD, Board Certified Hematologist',
+                    'Geriatrics': 'MD, Board Certified Geriatrician',
+                    'Plastic Surgery': 'MD, FACS, Board Certified Plastic Surgeon',
+                    'Family Medicine': 'MD, Board Certified Family Physician',
+                    'Anesthesiology': 'MD, Board Certified Anesthesiologist',
+                    'Radiology': 'MD, Board Certified Radiologist',
+                    'Physical Medicine & Rehabilitation': 'MD, Board Certified PM&R Specialist',
+                    'Emergency Medicine': 'MD, Board Certified Emergency Physician',
+                    'Pathology': 'MD, Board Certified Pathologist',
+                    'Obstetrics and Gynecology': 'MD, FACOG, Board Certified OB/GYN'
+                }
+                qualification = qualifications.get(specialization, 'MD, Board Certified Physician')
+                
+                # Calculate consultation fee based on experience and rating
+                base_fee = 100
+                experience_bonus = experience * 5
+                rating_bonus = (rating - 4.0) * 50
+                consultation_fee = base_fee + experience_bonus + rating_bonus
+                
+                # Get hospital name
+                hospital = hospitals[hospital_idx % len(hospitals)]
+                
+                # Generate bio
+                bio = f"Experienced {specialization} specialist with {experience} years of practice at {hospital}. Committed to providing excellent patient care."
+                
+                # Image URL (placeholder - you can update these with real images later)
+                image_url = f"https://ui-avatars.com/api/?name={name.replace(' ', '+')}&size=200&background=random"
+                
+                # Insert doctor
+                cursor.execute("""
+                    INSERT INTO doctors (
+                        name, email, phone, specialization, qualification, 
+                        experience_years, consultation_fee, rating, available, 
+                        image_url, hospital, bio
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    )
+                    ON CONFLICT (email) DO NOTHING
+                """, (
+                    name, email, phone, specialization, qualification,
+                    experience, consultation_fee, rating, True,
+                    image_url, hospital, bio
+                ))
+                
+                success_count += 1
+                if success_count % 10 == 0:
+                    print(f"✅ Added {success_count} doctors...")
+        
+        print("=" * 60)
+        print(f"✅ Successfully added {success_count} doctors to Neon DB!")
+        print("\n📊 Summary by Specialization:")
+        
+        # Get count by specialization
+        specializations = execute_query("""
+            SELECT specialization, COUNT(*) as count 
+            FROM doctors 
+            GROUP BY specialization 
+            ORDER BY count DESC
+        """)
+        
+        for spec in specializations:
+            print(f"   • {spec['specialization']}: {spec['count']} doctors")
+        
+        print("\n🎉 Doctor data population complete!")
+        
+    except Exception as error:
+        print(f"\n❌ Error adding doctors: {error}")
+        raise
 
 if __name__ == '__main__':
     add_doctors()
