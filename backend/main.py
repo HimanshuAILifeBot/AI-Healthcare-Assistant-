@@ -181,13 +181,8 @@ def get_user_appointments(user_id: int):
     logger.info(f"Fetching appointments for user_id={user_id}")
     cur = conn.cursor()
     try:
-        # First get patient_id from user_id
-        cur.execute("SELECT id FROM patients WHERE user_id = %s", (user_id,))
-        patient_row = cur.fetchone()
-        if not patient_row:
-            raise HTTPException(status_code=404, detail="Patient not found")
-        
-        patient_id = patient_row[0]
+        # In new schema, user_id IS the patient id (no separate users table)
+        patient_id = user_id
         
         # Get appointments with doctor and hospital details
         cur.execute("""
@@ -195,17 +190,15 @@ def get_user_appointments(user_id: int):
                 a.id,
                 d.name as doctor_name,
                 d.specialization,
-                h.name as hospital_name,
-                asl.available_date,
-                asl.start_time,
-                a.reason,
-                'Scheduled' as status
+                d.hospital as hospital_name,
+                a.appointment_date,
+                a.appointment_time,
+                a.symptoms as reason,
+                a.status
             FROM appointments a
             JOIN doctors d ON a.doctor_id = d.id
-            JOIN availability_slots asl ON a.slot_id = asl.id
-            LEFT JOIN hospitals h ON d.hospital_id = h.id
             WHERE a.patient_id = %s
-            ORDER BY asl.available_date DESC, asl.start_time DESC
+            ORDER BY a.appointment_date DESC, a.appointment_time DESC
         """, (patient_id,))
         
         appointment_rows = cur.fetchall()
@@ -308,14 +301,16 @@ async def create_appointment(req: AppointmentRequest):
     cur = conn.cursor()
     try:
         # Create appointment
-        cur.execute("SELECT * FROM sp_create_appointment(%s, %s, %s, %s)", 
-                   (req.patient_id, req.doctor_id, req.slot_id, req.reason))
+        cur.execute("SELECT * FROM sp_create_appointment(%s, %s, %s, %s, %s)", 
+                   (req.patient_id, req.doctor_id, req.appointment_date, 
+                    req.appointment_time, req.reason))
         appointment_id = cur.fetchone()[0]
         conn.commit()
         
         # Generate and send invoice asynchronously
         try:
-            await generate_and_send_invoice(appointment_id, req.patient_id, req.doctor_id, req.slot_id, req.reason)
+            await generate_and_send_invoice(appointment_id, req.patient_id, req.doctor_id, 
+                                          req.appointment_date, req.appointment_time, req.reason)
         except Exception as invoice_error:
             logger.error(f"Failed to generate/send invoice: {invoice_error}")
             # Don't fail the appointment creation if invoice fails
@@ -328,7 +323,7 @@ async def create_appointment(req: AppointmentRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def generate_and_send_invoice(appointment_id, patient_id, doctor_id, slot_id, reason):
+async def generate_and_send_invoice(appointment_id, patient_id, doctor_id, appointment_date, appointment_time, reason):
     """
     Generate invoice PDF and send via email (agentic workflow)
     """
@@ -336,10 +331,9 @@ async def generate_and_send_invoice(appointment_id, patient_id, doctor_id, slot_
     try:
         # Fetch patient details
         cur.execute("""
-            SELECT p.name, p.contact_number, p.medical_record_number, 
-                   p.blood_group, u.email
+            SELECT p.name, p.phone, p.id::TEXT as medical_record_number, 
+                   p.blood_group, p.email
             FROM patients p
-            JOIN users u ON p.user_id = u.id
             WHERE p.id = %s
         """, (patient_id,))
         patient_row = cur.fetchone()
@@ -354,15 +348,12 @@ async def generate_and_send_invoice(appointment_id, patient_id, doctor_id, slot_
             'email': patient_row[4]
         }
         
-        # Fetch doctor and appointment details
+        # Fetch doctor details
         cur.execute("""
-            SELECT d.name, d.specialization, h.name, asl.available_date, 
-                   asl.start_time, d.consultation_fees
+            SELECT d.name, d.specialization, d.hospital, d.consultation_fee
             FROM doctors d
-            LEFT JOIN hospitals h ON d.hospital_id = h.id
-            JOIN availability_slots asl ON asl.id = %s
             WHERE d.id = %s
-        """, (slot_id, doctor_id))
+        """, (doctor_id,))
         doctor_row = cur.fetchone()
         if not doctor_row:
             raise Exception("Doctor not found")
@@ -371,13 +362,13 @@ async def generate_and_send_invoice(appointment_id, patient_id, doctor_id, slot_
             'doctor_name': doctor_row[0],
             'specialization': doctor_row[1],
             'hospital_name': doctor_row[2] or 'General Hospital',
-            'fees': doctor_row[5] or 500
+            'fees': doctor_row[3] or 500
         }
         
         appointment_data = {
             'id': appointment_id,
-            'appointment_date': str(doctor_row[3]),
-            'appointment_time': str(doctor_row[4]),
+            'appointment_date': appointment_date,
+            'appointment_time': appointment_time,
             'reason': reason,
             'transaction_id': f'RAZORPAY_{appointment_id:05d}'
         }
@@ -417,65 +408,6 @@ async def generate_and_send_invoice(appointment_id, patient_id, doctor_id, slot_
         raise
     finally:
         cur.close()
-
-@app.get("/appointments/{user_id}")
-def get_user_appointments(user_id: int):
-    logger.info(f"Fetching appointments for user_id={user_id}")
-    cur = conn.cursor()
-    try:
-        # First get the patient_id from user_id
-        cur.execute("SELECT * FROM sp_get_patient_id(%s);", (user_id,))
-        patient_row = cur.fetchone()
-        if not patient_row:
-            raise HTTPException(status_code=404, detail="Patient not found")
-        
-        patient_id = patient_row[0]
-        
-        # Get appointments with doctor and hospital details
-        cur.execute("""
-            SELECT 
-                a.id,
-                d.name as doctor_name,
-                d.specialization,
-                h.name as hospital_name,
-                s.available_date,
-                s.start_time,
-                a.reason,
-                CASE 
-                    WHEN s.available_date < CURRENT_DATE THEN 'Completed'
-                    WHEN s.available_date = CURRENT_DATE AND s.start_time < CURRENT_TIME THEN 'Completed'
-                    ELSE 'Scheduled'
-                END as status
-            FROM appointments a
-            JOIN doctors d ON a.doctor_id = d.id
-            JOIN hospitals h ON d.hospital_id = h.id
-            JOIN availability_slots s ON a.slot_id = s.id
-            WHERE a.patient_id = %s
-            ORDER BY s.available_date DESC, s.start_time DESC
-        """, (patient_id,))
-        
-        appointments_data = cur.fetchall()
-        cur.close()
-        
-        appointments = []
-        for row in appointments_data:
-            appointments.append({
-                "id": row[0],
-                "doctor_name": row[1],
-                "doctor_specialization": row[2],
-                "hospital_name": row[3],
-                "appointment_date": str(row[4]),
-                "appointment_time": str(row[5]),
-                "reason": row[6],
-                "status": row[7]
-            })
-        
-        return {"appointments": appointments}
-        
-    except Exception as e:
-        logger.error(f"Error fetching appointments: {e}")
-        cur.close()
-        raise HTTPException(status_code=500, detail=f"Failed to fetch appointments: {e}")
 
 @app.post("/tts")
 async def text_to_speech(request: TTSRequest):

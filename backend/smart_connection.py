@@ -48,6 +48,13 @@ class SmartConnection:
                 cur = self._conn.cursor()
                 cur.execute("SELECT 1")
                 cur.close()
+        except psycopg2.errors.InFailedSqlTransaction:
+            # Transaction is aborted, rollback and retry
+            logger.warning(f"⚠️  Transaction aborted, rolling back")
+            try:
+                self._conn.rollback()
+            except:
+                self._connect()
         except (psycopg2.OperationalError, psycopg2.InterfaceError) as e:
             logger.warning(f"⚠️  Connection lost, reconnecting: {e}")
             self._connect()

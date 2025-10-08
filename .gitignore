@@ -44,3 +44,6 @@ build/
 # SQL dumps (except function files)
 #*.sql
 !sql/functions/*.sql
+
+
+voice_labs/

@@ -21,7 +21,8 @@ class SignupRequest(BaseModel):
 class AppointmentRequest(BaseModel):
     patient_id: int
     doctor_id: int
-    slot_id: int
+    appointment_date: str  # Format: YYYY-MM-DD
+    appointment_time: str  # Format: HH:MM:SS
     reason: str
 
 class PatientDetailsResponse(BaseModel):
