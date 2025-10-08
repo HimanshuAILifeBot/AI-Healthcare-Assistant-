@@ -1,0 +1,15 @@
+# Core FastAPI and server dependencies
+fastapi==0.104.1
+uvicorn==0.24.0
+
+# Azure Speech Services
+azure-cognitiveservices-speech==1.45.0
+
+# HTTP client for Azure OpenAI API calls
+aiohttp==3.11.13
+
+# Environment variables
+python-dotenv==1.1.0
+
+# WebSocket support (included with FastAPI but explicit for clarity)
+websockets==15.0.1

@@ -10,3 +10,5 @@ class Config:
     DB_HOST = os.getenv("DB_HOST")
     DB_PORT = os.getenv("DB_PORT")
     FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+    AZURE_SPEECH_KEY = os.getenv("AZURE_SPEECH_KEY")
+    AZURE_SPEECH_REGION = os.getenv("AZURE_SPEECH_REGION")

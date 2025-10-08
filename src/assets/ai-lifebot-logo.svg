@@ -1,0 +1,19 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- AI text -->
+  <text x="10" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#D97706">AI</text>
+  
+  <!-- LifeBot text -->
+  <text x="50" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#374151">LifeB</text>
+  
+  <!-- Robot head icon -->
+  <circle cx="140" cy="25" r="12" fill="#F59E0B" stroke="#92400E" stroke-width="2"/>
+  <circle cx="136" cy="22" r="2" fill="#3B82F6"/>
+  <circle cx="144" cy="22" r="2" fill="#3B82F6"/>
+  <path d="M136 28 Q140 32 144 28" stroke="#374151" stroke-width="1.5" fill="none"/>
+  
+  <!-- T text -->
+  <text x="155" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#374151">T</text>
+  
+  <!-- TM symbol -->
+  <text x="175" y="20" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#6B7280">TM</text>
+</svg>

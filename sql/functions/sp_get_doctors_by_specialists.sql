@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION sp_get_doctors_by_specialists(specialists TEXT[])
+CREATE OR REPLACE FUNCTION sp_get_doctors_by_specialists(specialists TEXT[], filter_date DATE DEFAULT NULL)
 RETURNS TABLE (
     doctor_id INT,
     name TEXT,
@@ -18,7 +18,7 @@ BEGIN
         d.name::TEXT,
         d.specialization::TEXT,
         d.rating,
-        d.fees,
+        CAST(d.consultation_fee AS INT) as fees,  -- Use actual consultation fee
         h.name::TEXT,
         a.available_date,
         a.start_time,
@@ -27,8 +27,8 @@ BEGIN
     FROM doctors d
     JOIN hospitals h ON d.hospital_id = h.id
     LEFT JOIN availability_slots a ON d.id = a.doctor_id
-    JOIN specialists s ON d.specialist_id = s.id
-    WHERE s.name = ANY(specialists)
+    WHERE d.specialization = ANY(specialists)
+    AND (filter_date IS NULL OR a.available_date = filter_date)
     ORDER BY a.available_date, a.start_time;
 END;
 $$ LANGUAGE plpgsql;

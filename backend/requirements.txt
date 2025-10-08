@@ -11,4 +11,9 @@ requests
 tqdm
 numpy
 transformers
+sentence-transformers
+azure-cognitiveservices-speech
+aiohttp
+reportlab
+Pillow
 

@@ -2,7 +2,7 @@
 
 INSERT INTO users (email, password)
 VALUES 
-('john@google.com', 'user2')
+('john@google.com', 'user2');
 
 CREATE TABLE patients (
     id SERIAL PRIMARY KEY,

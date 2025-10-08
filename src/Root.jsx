@@ -1,21 +1,25 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HeroPage from "./components/HeroPage";
 import App from "./App";                     
 import Dashboard from "./components/Dashboard";  
 import Assistant from "./components/Assistant";
 import UserContext from "./context/UserContext";
 import Recommendation from "./components/Recommendation";
 import Success from "./components/Success";
+import Insurance from "./components/Insurance";
 
 const Root = () => {
   return (
     <Router>
       <UserContext>
         <Routes>
-          <Route path="/" element={<App />} />
+          <Route path="/" element={<HeroPage />} />
+          <Route path="/login" element={<App />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/assistant" element={<Assistant />} />
           <Route path="/recommendation" element={<Recommendation />} />
           <Route path="/success" element={<Success />} />
+          <Route path="/insurance" element={<Insurance />} />
         </Routes>
       </UserContext>
     </Router>

@@ -1,168 +1,222 @@
-/* Importing Google Fonts - Montserrat */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Primary Colors - Modern Healthcare Blue */
+  --primary-color: #3b82f6;
+  --primary-hover-color: #1d4ed8;
+  --primary-light: #93c5fd;
+  --primary-dark: #1e40af;
+  
+  /* Secondary Colors - Healthcare Green */
+  --secondary-color: #10b981;
+  --secondary-hover-color: #059669;
+  --secondary-light: #6ee7b7;
+  
+  /* Status Colors */
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+  
+  /* Spacing & Sizing */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease-in-out;
+  --transition-normal: 0.3s ease-in-out;
+  --transition-slow: 0.5s ease-in-out;
+}
+
+/* Dark Theme (Default) */
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: rgba(30, 41, 59, 0.8);
+  --bg-card-hover: rgba(30, 41, 59, 0.95);
+  --bg-input: rgba(15, 23, 42, 0.6);
+  --bg-overlay: rgba(15, 23, 42, 0.95);
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --border-primary: rgba(59, 130, 246, 0.2);
+  --border-secondary: rgba(148, 163, 184, 0.1);
+  --border-hover: rgba(59, 130, 246, 0.4);
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+  
+  --gradient-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --gradient-card: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: rgba(255, 255, 255, 1);
+  --bg-input: rgba(241, 245, 249, 0.8);
+  --bg-overlay: rgba(248, 250, 252, 0.98);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+  
+  --border-primary: rgba(59, 130, 246, 0.3);
+  --border-secondary: rgba(226, 232, 240, 0.8);
+  --border-hover: rgba(59, 130, 246, 0.5);
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+  
+  --gradient-primary: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --gradient-card: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Montserrat", sans-serif;
 }
+
 body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Modern scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: var(--radius-lg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Focus styles */
+*:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Utility classes */
+.glass-effect {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover-color) 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Social Login Styling */
+.social-login {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.social-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: #1f3d73
-}
-#root {
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.6rem;
-}
-.login-container {
-  margin: 0 auto;
-  max-width: 410px;
-  padding: 2rem 1.5rem;
-  border-radius: 0.5rem;
-  background: #fff;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-.login-container .form-title {
-  text-align: center;
-  font-size: 1.37rem;
-  font-weight: 600;
-  margin-bottom: 1.87rem;
-}
-.login-container .social-login {
-  display: flex;
-  gap: 1.31rem;
-}
-.social-login .social-button {
-  display: flex;
-  gap: 0.81rem;
-  width: 100%;
+  padding: 1rem 1.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--card-background);
+  color: var(--text-color);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  padding: 0.75rem 0;
-  border-radius: 0.31rem;
-  align-items: center;
-  justify-content: center;
-  background: #F9F8FF;
-  border: 1px solid #D5CBFF;
-  transition: 0.3s ease;
-}
-.social-login .social-button:hover {
-  border-color: #686380;
-  background: #f1eff9;
-}
-.social-login .social-button .social-icon {
-  width: 23px;
-}
-.login-container .separator {
+  transition: all var(--transition-normal);
   position: relative;
-  margin: 1.5rem 0;
-  text-align: center;
-  background: #fff;
+  overflow: hidden;
 }
-.login-container .separator span {
-  z-index: 1;
-  font-weight: 500;
-  color: #807a98;
-  position: relative;
-  background: #fff;
-  font-size: 1.06rem;
-  padding: 0 0.9rem;
-}
-.login-container .separator::after {
-  content: "";
+
+.social-button::before {
+  content: '';
   position: absolute;
-  left: 0;
-  top: 50%;
-  height: 1px;
-  width: 100%;
-  background: #bfb3f2;
-}
-.login-form .input-wrapper {
-  height: 54px;
-  width: 100%;
-  position: relative;
-  margin-bottom: 1.5rem;
-}
-.login-form .input-field {
+  top: 0;
+  left: -100%;
   width: 100%;
   height: 100%;
-  outline: none;
-  font-size: 1.06rem;
-  border-radius: 0.31rem;
-  border: 1px solid #bfb3f2;
-  padding: 0px 1.25rem 0 3.12rem;
-  transition: 0.2s ease;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
-.login-form .input-field:focus {
-  border-color: #5F41E4;
+
+.social-button:hover::before {
+  left: 100%;
 }
-.login-form .input-field::placeholder {
-  color: #9284c8;
+
+.social-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
-.login-form .input-wrapper i {
-  position: absolute;
-  top: 50%;
-  height: 100%;
-  display: flex;
-  color: #a395e0;
-  align-items: center;
-  transform: translateY(-50%);
-  transition: 0.2s ease;
+
+.google-button {
+  border-color: #4285F4;
 }
-.login-form .input-wrapper i:not(.eye-icon) {
-  left: 0.93rem;
-  pointer-events: none;
+
+.google-button:hover {
+  background: #4285F4;
+  color: white;
 }
-.login-form .input-field:focus ~ i:not(.eye-icon) {
-  color: #5F41E4;
+
+.apple-button {
+  border-color: #000;
+  color: #000;
 }
-.login-form .input-wrapper i.eye-icon {
-  display: none;
-  right: 0.93rem;
-  color: #917DE8;
-  cursor: pointer;
-  font-size: 1.25rem;
+
+.apple-button:hover {
+  background: #000;
+  color: white;
 }
-.login-form .input-wrapper .input-field:valid ~ .eye-icon {
-  display: flex;
-}
-.login-form .forgot-password-link {
-  display: block;
-  width:fit-content;
-  margin-top: -0.44rem;
-}
-.login-form .login-button {
-  border: none;
-  outline: none;
-  width: 100%;
-  height: 54px;
-  color: #fff;
-  font-size: 1.125rem;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 2.19rem;
-  border-radius: 0.31rem;
-  background: #735bd4;
-  transition: 0.3s ease;
-}
-.login-form .login-button:hover {
-  background: #4320df;
-}
-.login-container .signup-prompt {
-  text-align: center;
-  font-size: 1.06rem;
-  font-weight: 500;
-  margin: 1.75rem 0 0.31rem;
-}
-.login-container a {
-  color: #5F41E4;
-  font-weight: 500;
-  text-decoration: none;
-}
-.login-container a:hover {
-  text-decoration: underline;
+
+.social-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
