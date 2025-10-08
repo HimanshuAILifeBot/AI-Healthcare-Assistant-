@@ -115,9 +115,13 @@ def create_stored_procedures():
             id INT,
             name VARCHAR,
             specialization VARCHAR,
-            experience INT,
             rating DECIMAL,
-            hospital_id INT
+            fees DECIMAL,
+            hospital VARCHAR,
+            next_available_date DATE,
+            start_time TIME,
+            end_time TIME,
+            slot_id INT
         ) AS $$
         BEGIN
             RETURN QUERY
@@ -125,9 +129,13 @@ def create_stored_procedures():
                 d.id,
                 d.name::VARCHAR,
                 d.specialization::VARCHAR,
-                d.experience_years as experience,
                 d.rating,
-                1 as hospital_id  -- Default hospital ID
+                d.consultation_fee as fees,
+                d.hospital::VARCHAR,
+                (CURRENT_DATE + INTERVAL '1 day')::DATE as next_available_date,  -- Tomorrow
+                '09:00:00'::TIME as start_time,  -- Default morning slot
+                '17:00:00'::TIME as end_time,    -- Default evening slot
+                d.id as slot_id  -- Use doctor ID as temporary slot_id
             FROM doctors d
             WHERE d.specialization = ANY(p_specializations)
             AND d.available = TRUE
