@@ -80,31 +80,19 @@ def signup(request: SignupRequest):
     logger.info(f"Signup attempt: {request.email}")
     cur = conn.cursor()
     try:
-        # First, create the user account
-        cur.execute(
-            "INSERT INTO users (email, password) VALUES (%s, %s) RETURNING id",
-            (request.email, request.password)
-        )
-        user_id = cur.fetchone()[0]
-        
-        # Generate a unique medical record number
-        medical_record_number = f"MRN{user_id:06d}"
-        
-        # Insert patient details
+        # Insert directly into patients table (no separate users table in new schema)
         cur.execute(
             """INSERT INTO patients (
-                user_id, name, date_of_birth, gender, contact_number, 
-                medical_record_number, blood_group, marital_status
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                name, email, phone, password_hash, date_of_birth, gender, blood_group
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
             (
-                user_id, request.name, request.dateOfBirth, request.gender,
-                request.phone, medical_record_number, request.bloodGroup, request.maritalStatus
+                request.name, request.email, request.phone, request.password,
+                request.dateOfBirth, request.gender, request.bloodGroup
             )
         )
         patient_id = cur.fetchone()[0]
         
         # Insert medical history if provided
-        medical_history_text = None
         if request.medicalHistory or request.allergies or request.currentMedications:
             history_parts = []
             if request.medicalHistory:
@@ -114,20 +102,20 @@ def signup(request: SignupRequest):
             if request.currentMedications:
                 history_parts.append(f"Current Medications: {request.currentMedications}")
             medical_history_text = " | ".join(history_parts)
-        
-        cur.execute(
-            """INSERT INTO patient_history (
-                patient_id, past_diagnoses, lifestyle_factors
-            ) VALUES (%s, %s, %s)""",
-            (patient_id, medical_history_text, f"Allergies: {request.allergies or 'None'}, Medications: {request.currentMedications or 'None'}")
-        )
+            
+            cur.execute(
+                """INSERT INTO medical_records (
+                    patient_id, record_type, description
+                ) VALUES (%s, %s, %s)""",
+                (patient_id, 'Medical History', medical_history_text)
+            )
         
         conn.commit()
         cur.close()
         
         return JSONResponse(content={
             "message": "Signup successful", 
-            "user_id": user_id,
+            "user_id": patient_id,  # Use patient_id as user_id
             "patient_id": patient_id
         })
         
