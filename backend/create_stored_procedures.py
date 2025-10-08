@@ -108,9 +108,9 @@ def create_stored_procedures():
         $$ LANGUAGE plpgsql;
     """)
     
-    # 5. Get doctors by specialist
+    # 5. Get doctors by specialist (accepts array of specializations)
     procedures.append("""
-        CREATE OR REPLACE FUNCTION sp_get_doctors_by_specialists(p_specialization TEXT)
+        CREATE OR REPLACE FUNCTION sp_get_doctors_by_specialists(p_specializations TEXT[])
         RETURNS TABLE(
             id INT,
             name VARCHAR,
@@ -129,9 +129,9 @@ def create_stored_procedures():
                 d.rating,
                 1 as hospital_id  -- Default hospital ID
             FROM doctors d
-            WHERE d.specialization = p_specialization
+            WHERE d.specialization = ANY(p_specializations)
             AND d.available = TRUE
-            ORDER BY d.rating DESC;
+            ORDER BY d.rating DESC, d.specialization;
         END;
         $$ LANGUAGE plpgsql;
     """)
