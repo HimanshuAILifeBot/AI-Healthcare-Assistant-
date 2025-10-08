@@ -109,6 +109,7 @@ def create_stored_procedures():
     """)
     
     # 5. Get doctors by specialist (accepts array of specializations)
+    # Returns all available time slots for each doctor
     procedures.append("""
         CREATE OR REPLACE FUNCTION sp_get_doctors_by_specialists(p_specializations TEXT[])
         RETURNS TABLE(
@@ -123,7 +124,13 @@ def create_stored_procedures():
             end_time TIME,
             slot_id INT
         ) AS $$
+        DECLARE
+            v_current_day INT;
+            v_days_ahead INT;
         BEGIN
+            -- Get current day of week (0 = Monday, 6 = Sunday)
+            v_current_day := EXTRACT(ISODOW FROM CURRENT_DATE) - 1;
+            
             RETURN QUERY
             SELECT 
                 d.id,
@@ -132,14 +139,23 @@ def create_stored_procedures():
                 d.rating,
                 d.consultation_fee as fees,
                 d.hospital::VARCHAR,
-                (CURRENT_DATE + INTERVAL '1 day')::DATE as next_available_date,  -- Tomorrow
-                '09:00:00'::TIME as start_time,  -- Default morning slot
-                '17:00:00'::TIME as end_time,    -- Default evening slot
-                d.id as slot_id  -- Use doctor ID as temporary slot_id
+                -- Calculate next occurrence of this day
+                (CURRENT_DATE + 
+                    CASE 
+                        WHEN da.day_of_week >= v_current_day 
+                        THEN (da.day_of_week - v_current_day)
+                        ELSE (7 - v_current_day + da.day_of_week)
+                    END * INTERVAL '1 day'
+                )::DATE as next_available_date,
+                da.start_time,
+                da.end_time,
+                da.id as slot_id  -- Use availability slot ID
             FROM doctors d
+            INNER JOIN doctor_availability da ON d.id = da.doctor_id
             WHERE d.specialization = ANY(p_specializations)
             AND d.available = TRUE
-            ORDER BY d.rating DESC, d.specialization;
+            AND da.is_available = TRUE
+            ORDER BY d.rating DESC, d.name, next_available_date, da.start_time;
         END;
         $$ LANGUAGE plpgsql;
     """)
